@@ -6,6 +6,7 @@ This repository presents a research project focused on ensuring data privacy in 
 
 - [Research Objectives](#research-objectives)
 - [Datasets](#datasets)
+- [Network Architectures](#network-architectures)
 - [Results](#results)
 - [Conclusion](#conclusion)
 - [Future Work](#future-work)
@@ -28,13 +29,28 @@ The following datasets were used in this research:
 2. **Breast Cancer**: A dataset with 569 samples, each described by 30 attributes related to breast tumor characteristics.
 3. **Pascal VOC**: A dataset for visual object classification, containing over 11,000 annotated images across 20 object categories.
 
-
-### Network Architectures
+## Network Architectures
 
 Different neural network architectures were employed for various datasets:
-- For MNIST, a convolutional neural network (CNN) was used.
-- For Breast Cancer classification, a fully connected neural network was implemented.
-- MobileNetV2 was utilized for object detection tasks with Pascal VOC.
+
+### MNIST - Convolutional Neural Network (CNN)
+
+![CNN Architecture](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/mnist.png)
+
+### Breast Cancer - Fully Connected Neural Network
+
+![Fully Connected Network Architecture](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/breast_cancer.png)
+
+### Pascal VOC - MobileNetV2
+
+![MobileNetV2 Architecture](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/mobilenet.png)
+
+## Masking and Encryption Examples
+
+Below is an example of data :
+
+![Mnist example](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/mnist_examples.png)
+![PascalVOC example](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/pascalvoc_example.png)
 
 ## Results
 The following table summarizes the results of training models on various datasets using different methods:
