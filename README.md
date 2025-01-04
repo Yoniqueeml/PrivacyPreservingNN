@@ -35,22 +35,22 @@ Different neural network architectures were employed for various datasets:
 
 ### MNIST - Convolutional Neural Network (CNN)
 
-![CNN Architecture](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/mnist.png)
+![CNN Architecture](arch_images/mnist.png)
 
 ### Breast Cancer - Fully Connected Neural Network
 
-![Fully Connected Network Architecture](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/breast_cancer.png)
+![Fully Connected Network Architecture](arch_images/breast_cancer.png)
 
 ### Pascal VOC - MobileNetV2
 
-![MobileNetV2 Architecture](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/mobilenet.png)
+![MobileNetV2 Architecture](arch_images/mobilenet.png)
 
 ## Masking and Encryption Examples
 
 Below is an example of data :
 
-![Mnist example](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/mnist_examples.png)
-![PascalVOC example](https://github.com/Yoniqueeml/PrivacyPreservingNN/tree/master/arch_images/pascalvoc_example.png)
+![Mnist example](arch_images/mnist_examples.png)
+![PascalVOC example](arch_images/pascalvoc_example.png)
 
 ## Results
 The following table summarizes the results of training models on various datasets using different methods:
