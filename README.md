@@ -12,7 +12,6 @@ This repository presents a research project focused on ensuring data privacy in 
 - [Google Colab](#google-colab)
 - [References](#references)
 
-
 ## Research Objectives
 
 The main objectives of this research include:
@@ -38,15 +37,33 @@ Different neural network architectures were employed for various datasets:
 - MobileNetV2 was utilized for object detection tasks with Pascal VOC.
 
 ## Results
+The following table summarizes the results of training models on various datasets using different methods:
+m - masked, e - encryption
 
-The results indicate that while privacy-preserving methods reduce model accuracy, they still maintain a level of effectiveness. Key findings include:
-- Models trained on original datasets performed best.
-- Masking and encryption techniques led to reduced accuracy, especially at higher masking percentages.
-- The combination of masking and encryption resulted in the lowest accuracy among all methods tested.
+| Dataset       | Method      | Masking (%) | Accuracy (%) | Epochs |
+|---------------|-------------|-------------|--------------|--------|
+| MNIST         | -           | -           | 98.93        | 10     |
+| MNIST         | m           | 20          | 98.27        | 10     |
+| MNIST         | m           | 50          | 97.55        | 10     |
+| MNIST         | e           | -           | 96.26        | 10     |
+| MNIST         | m + e       | 20          | 94.28        | 10     |
+| MNIST         | m + e       | 50          | 88.24        | 10     |
+| Breast Cancer | -           | -           | 96.49        | 20     |
+| Breast Cancer | m           | 20          | 93.86        | 20     |
+| Breast Cancer | m           | 50          | 89.47        | 20     |
+| Breast Cancer | e           | -           | 90.35        | 20     |
+| Breast Cancer | m + e       | 20          | 85.09        | 20     |
+| Breast Cancer | m + e       | 50          | 81.58        | 20     |
+| Pascal VOC    | -           | -           | 95.97        | 10     |
+| Pascal VOC    | m           | 30          | 93.76        | 10     |
+| Pascal VOC    | m + e       | 30          | 87.71        | 10     |
+| Pascal VOC    | m + e       | 30          | 90.83        | 50     |
+
+The results indicate that while privacy-preserving methods reduce model accuracy, they still maintain a level of effectiveness.
 
 ## Conclusion
 
-The table of results shows that even with these methods, a fairly high accuracy can be achieved.
+This research highlights the importance of developing effective mechanisms to protect data privacy in machine learning while maintaining model performance. The findings underscore the need for a balance between confidentiality and accuracy.
 
 ## Future Work
 
