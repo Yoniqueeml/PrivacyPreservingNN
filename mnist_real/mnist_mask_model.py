@@ -25,17 +25,6 @@ def read_mnist_labels(filename):
     return label_data
 
 
-train_x = read_mnist_images(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\train\train-images-idx3-ubyte')
-train_y = read_mnist_labels(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\train_labels\train-labels-idx1-ubyte')
-
-train_x = train_x / 255.0
-
-test_x = read_mnist_images(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\test\t10k-images.idx3-ubyte')
-test_y = read_mnist_labels(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\test_labels\t10k-labels.idx1-ubyte')
-
-test_x = test_x / 255.0
-
-
 def show_examples():
     plt.figure(figsize=(10, 10))
     for i in range(10):
@@ -47,18 +36,7 @@ def show_examples():
     plt.tight_layout()
     plt.show()
 
-
 # show_examples()
-
-trn_x = torch.from_numpy(train_x).type(torch.FloatTensor).view(-1, 1, 28, 28)
-trn_y = torch.from_numpy(train_y).type(torch.LongTensor)
-
-val_x = torch.from_numpy(test_x).type(torch.FloatTensor).view(-1, 1, 28, 28)
-val_y = torch.from_numpy(test_y).type(torch.LongTensor)
-
-trn = TensorDataset(trn_x, trn_y)
-trn = DataLoader(trn, batch_size=1024)
-
 
 class Model(nn.Module):
     def __init__(self):
@@ -80,33 +58,49 @@ class Model(nn.Module):
         return F.log_softmax(X, dim=1)
 
 
-cnn = Model()
-optimizer = Adam(cnn.parameters(), lr=1e-3)
-
-
 def compute_val_loss(val_x, val_y, model):
     model.eval()
     output = model(val_x)
     loss = F.cross_entropy(output, val_y)
     return loss
 
+def apply_mask(data, masked_percent):
+    mask = (torch.rand(data.size()) > masked_percent / 100).float()
+    return data * mask
 
+
+train_x = read_mnist_images(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\train\train-images-idx3-ubyte')
+train_y = read_mnist_labels(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\train_labels\train-labels-idx1-ubyte')
+
+train_x = train_x / 255.0
+
+test_x = read_mnist_images(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\test\t10k-images.idx3-ubyte')
+test_y = read_mnist_labels(rf'D:\University\Course5\NIRS\MNIST\Test\mnist_real\data\test_labels\t10k-labels.idx1-ubyte')
+
+test_x = test_x / 255.0
+
+trn_x = torch.from_numpy(train_x).type(torch.FloatTensor).view(-1, 1, 28, 28)
+trn_y = torch.from_numpy(train_y).type(torch.LongTensor)
+
+val_x = torch.from_numpy(test_x).type(torch.FloatTensor).view(-1, 1, 28, 28)
+val_y = torch.from_numpy(test_y).type(torch.LongTensor)
+
+cnn = Model()
+optimizer = Adam(cnn.parameters(), lr=1e-3)
 EPOCHS = 10
+masked_percent = 0  # x% = 0
+weights_file_path = f'{masked_percent}%_masked.pth'
+batch_size = 1024
 
 trn_loss = []
 val_loss = []
 
-weights_file_path = '50%_masked.pth'
-
-masked_percent = 20 #x% = 0
-def apply_mask(data):
-    mask = (torch.rand(data.size()) > masked_percent/100).float()
-    return data * mask
-
 trn = TensorDataset(trn_x, trn_y)
-trn = DataLoader(trn, batch_size=1024)
+trn = DataLoader(trn, batch_size=batch_size)
 
-if os.path.exists(weights_file_path):
+val_x = apply_mask(val_x, masked_percent)
+
+if os.path.exists(weights_file_path) and 1 == 0:
     print("Loading weights...")
     cnn.load_state_dict(torch.load(weights_file_path))
     cnn.eval()
@@ -116,7 +110,7 @@ else:
         for batch_idx, (data, target) in enumerate(trn):
             optimizer.zero_grad()
 
-            masked_data = apply_mask(data)
+            masked_data = apply_mask(data, masked_percent)
             y_pred = cnn(masked_data)
 
             loss = F.cross_entropy(y_pred, target)
@@ -124,14 +118,13 @@ else:
 
             loss.backward()
             optimizer.step()
-
             loss = compute_val_loss(val_x, val_y, cnn)
             val_loss.append(loss.cpu().data.item())
 
         print("Epoch: {} | loss: {} | val_loss: {}".format(epoch + 1, trn_loss[-1], val_loss[-1]))
 
-    torch.save(cnn.state_dict(), f'{masked_percent}%_masked.pth')
-    print(f"Weights saved to {masked_percent}%_masked.pth")
+    #torch.save(cnn.state_dict(), f'{masked_percent}%_masked.pth')
+    #print(f"Weights saved to {masked_percent}%_masked.pth")
 
     plt.figure(figsize=(5, 5), dpi=200)
     plt.plot(trn_loss, label='training loss')
@@ -142,10 +135,8 @@ else:
 def predict_with_pytorch(model, val_x):
     model.eval()
     y_preds = []
-
     out = model(val_x)
     _, predicted = torch.max(out.data, 1)
-
     for p in predicted:
         y_preds.append(p.detach().cpu().numpy().item())
 
@@ -156,4 +147,15 @@ pred = predict_with_pytorch(cnn, val_x)
 acc = accuracy_score(val_y.numpy(), pred)
 
 print("Accuracy:", acc * 100, "%")
+with open(f"{masked_percent}%_masked_results.txt", "w") as f:
+    f.write("Epoch\tTraining Loss\tValidation Loss\n")
+    epoch_size = len(trn)
+    for i in range(EPOCHS):
+        start_idx = i * epoch_size
+        end_idx = (i + 1) * epoch_size
+        epoch_trn_loss = sum(trn_loss[start_idx:end_idx]) / epoch_size if end_idx < len(trn_loss) else sum(trn_loss[start_idx:]) / (len(trn_loss) - start_idx)
+        epoch_val_loss = val_loss[i]
+        f.write(f"{i+1}\t{epoch_trn_loss}\t{epoch_val_loss}\n")
+    f.write(f"\nAccuracy: {acc * 100}%\n")
 
+print(f"Результаты сохранены в файл {masked_percent}%_masked_results.txt")

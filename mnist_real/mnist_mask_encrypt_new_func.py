@@ -1,6 +1,7 @@
 import os
 import struct
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -9,6 +10,7 @@ from torch.optim import Adam
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score
+from torchvision import transforms
 
 
 def read_mnist_images(filename):
@@ -65,9 +67,47 @@ def compute_val_loss(val_x, val_y, model):
     loss = F.cross_entropy(output, val_y)
     return loss
 
-def encrypt(data):
-    encrypted_data = (data ** 5) + (0.3 * np.sin(data * 6 * np.pi)) + (0.3 * np.cos(data * 6 * np.pi))
-    return encrypted_data
+def encrypt(image, key=42):
+    def _encrypt_single(img):
+        if isinstance(img, torch.Tensor):
+            img = img.squeeze().numpy() * 255.0
+        elif img.ndim == 3 and img.shape[0] == 1:
+            img = img.squeeze() * 255.0
+
+        h, w = img.shape
+        img = img.astype(np.float32) / 255.0
+
+        np.random.seed(key)
+        freq_x = np.random.uniform(0.05, 0.2)
+        freq_y = np.random.uniform(0.05, 0.2)
+        phase_x = np.random.uniform(0, 2 * np.pi)
+        phase_y = np.random.uniform(0, 2 * np.pi)
+
+        x, y = np.meshgrid(np.arange(w), np.arange(h))
+        x = x.astype(np.float32)
+        y = y.astype(np.float32)
+
+        x_new = x + 10 * np.sin(freq_x * x + phase_x)
+        y_new = y + 10 * np.sin(freq_y * y + phase_y)
+
+        encrypted = cv2.remap(
+            img,
+            x_new, y_new,
+            interpolation=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_REFLECT
+        )
+
+        encrypted = np.sin(encrypted * np.pi)
+
+        encrypted = (encrypted - encrypted.min()) / (encrypted.max() - encrypted.min())
+        encrypted = (encrypted * 255).astype(np.uint8)
+
+        return transforms.ToTensor()(encrypted).squeeze(0)
+
+    if isinstance(image, np.ndarray) and image.ndim == 3:
+        return np.array([_encrypt_single(img) for img in image])
+    else:
+        return _encrypt_single(image)
 
 def apply_mask(data, masked_percent):
     mask = (torch.rand(data.size()) > masked_percent / 100).float()
@@ -133,15 +173,14 @@ val_y = torch.from_numpy(test_y).type(torch.LongTensor)
 encrypted_val_x = encrypt(val_x)
 trn_x = torch.from_numpy(encrypted_val_x).type(torch.FloatTensor).view(-1, 1, 28, 28)
 
-
 #show_comparison_examples(train_x[:10], train_y[:10], masked_percent=30)
 #show_encrypted_examples(encrypted_train_x, train_y)
 
 cnn = Model()
 optimizer = Adam(cnn.parameters(), lr=1e-3)
 EPOCHS = 10
-masked_percent = 30  # x% = 0
-weights_file_path = f'{masked_percent}%_masked_with_encrypt.pth'
+masked_percent = 0  # x% = 0
+weights_file_path = f'{masked_percent}%_masked_with_encrypt_new_func.pth'
 batch_size = 1024
 
 trn_loss = []
@@ -201,7 +240,7 @@ pred = predict_with_pytorch(cnn, val_x)
 acc = accuracy_score(val_y.numpy(), pred)
 
 print("Accuracy:", acc * 100, "%")
-with open(f"{masked_percent}%_masked_with_encrypt_results.txt", "w") as f:
+with open(f"{masked_percent}%_masked_with_encrypt_new_func_results.txt", "w") as f:
     f.write("Epoch\tTraining Loss\tValidation Loss\n")
     epoch_size = len(trn)
     for i in range(EPOCHS):
@@ -212,4 +251,4 @@ with open(f"{masked_percent}%_masked_with_encrypt_results.txt", "w") as f:
         f.write(f"{i+1}\t{epoch_trn_loss}\t{epoch_val_loss}\n")
     f.write(f"\nAccuracy: {acc * 100}%\n")
 
-print(f"Результаты сохранены в файл {masked_percent}%_masked_with_encrypt_results.txt")
+print(f"Результаты сохранены в файл {masked_percent}%_masked_with_encrypt_new_func_results.txt")
